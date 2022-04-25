@@ -1,0 +1,375 @@
+---
+title: "Basic Statistics"
+author: "Hao Cheng"
+date: "04/13/2022"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r loadPackagesLab, message = FALSE, warning=FALSE}
+library(knitr)
+```
+
+```{r}
+getwd()
+```
+
+A statistical distribution is a function that associates a probability to results of random experiments. For example, the random experiment can be the flip of a coin. Let's "measure" the result by assigning 1 to a tail and 0 to a head. The result is a discrete random variable Y that can take values 0 or 1. The statistical distribution, in this case a Probability Mass Function (pmf), is a function that associates a probability to each value of Y. For the example of the coin, we usually pick a function defined as follows: P(Y = 1) = P(Y = 0) = 0.5. This read as "the probability of Y taking a value of 1 is equal to the probability of Y taking a value of 0 and is equal to 0.5." Keep in mind that the actual pmf can and probably does differ for different individual coins. For an extreme example, remember that for a coin with two heads P(Y = 1) = 0 and P(Y = 0) = 1.0. The probability for the real coin experiment also depends on who flips the coin. It is possible to learn to get any side of the coin one wants.
+
+## 1. Binomial Distribution
+The binomial distribution with parameters n and p is the probability distribution of the number of successes in a sequence of n independent experiments, each asking a yes–no question, and each with its own outcome: success (with probability p) or failure (with probability q = 1 − p).
+
+Example:
+You want to have 10 tomato seedlings to transplant. You place 50 seeds in germinations trays. It is known that the probability that the seeds will germinate and become seedlings is 0.20. What is the probability that you will have enough seedlings? Keep in mind that if 10 or more than 10 seeds germinate, you will have enough seedlings. We assume that the probability of germination is constant, and that seeds behave independently.
+
+
+Plot the binomial distribution for p = 0.20 and n = 50.
+```{r BinomPlotLab}
+# Complete the code below
+plot(dbinom(x = 0:50, size = 50, prob = 0.2) ~ c(0:50), type = "h")
+```
+
+
+```{r BinomLab}
+help(pbinom)
+
+# Use pbinom() because it gives the cumulative probability
+# Keep in mind that the lower tail includes the q specified
+pbinom(q = 9, size = 50, prob = 0.2, lower.tail = FALSE) # P(X > q) 
+```
+
+
+## 2. Normal distribution, T-distribution, Confidence Intervals, and One-sample Hypothesis testing
+
+### Normal Distribution
+
+For continuous random variables we have statistical distributions that are called "Probability Density Functions" for which the probability of any specific number is 0, but the probability of getting a number in any interval, no matter how small, can be positive. The Normal distribution is one of those pdf's that is most used in statistics for many reasons. In this section we will explore and operate with the Normal distribution.
+
+```{r}
+help("Normal")
+#Note, dnorm gives the probability density, pnorm gives the probability distribution function, qnorm gives the quantile function, and rnorm generates random values from the distribution.
+
+set.seed(1)
+
+# obtain 5 random numbers from the standard normal distribution and put into Y5
+Y5 = rnorm(n = 5,
+            mean = 0,
+            sd = 1)
+
+# obtain 50 random numbers
+Y50 = rnorm(n=50,
+             mean = 0,
+             sd = 1) # obtain 50 random numbers
+
+#obtain the variances by adding code below
+mean5 = mean(Y5)
+var5 = var(Y5)
+
+mean50 = mean(Y50)
+var50 = var(Y50)
+```
+
+Is the relationship of the sample means and variances what you should have expected? What is the true mean and variance of the populations from which you obtained the samples? Why do the calculated means and variances differ?
+
+Answer: Yes, because as the sample size increases the closer the sample mean and variance is to the true mean. mean = 0, var = 1 Because the more samples you randomly take from a normal distribution the closer the mean and variance will be to the true mean and variance. So with 50 random samples, the mean and variance will be closer to the true mean and variance.
+
+
+### Normal Distribution
+
+Plot the pdf for a standard normal distribution. Modify the code and produce a graph of the pdf for a normal distribution with mean = 2 and sd = 0.7.
+
+```{r}
+# This plots the standard normal distribution.
+xna = seq(-5,5,0.1)
+pdf2a = dnorm(x = xna, mean = 0, sd = 1)
+plot(x = xna, y = pdf2a, type = "l", xlim = c(-5, 5), ylim = c(0, .5))
+#note the arguments “xlim” and “ylim” set the x and y axis boundaries for the plot
+
+#Modify for mean = 2, sd = 0.7. Is the plot below have a higher or lower peak than the first plot.
+xnb = seq( 2-4*0.7, 2+4*0.7 ,  0.1)
+pdf2b = dnorm(x = xnb , mean = 2, sd = 0.7)
+plot(x = xnb , y = pdf2b  , type = "l", xlim = c( 2-4*0.7 , 2+4*0.7 ), ylim = c(0 , 0.6 ))
+```
+
+### Student's t distribution
+
+When your sample size is small, and the true population standard deviation is unknown for a continuous probability distribution that you assume is normal, we use the t distribution instead.
+
+```{r}
+#lets compare the t distribution (with df = 3, 6, 100) with the normal distribution.
+# note that as df increase the t approaches the normal
+#you need to run all the code together including the line below to the legend
+curve(expr = dnorm(x, mean= 0,sd = 1), from = -4, to = 4, col = "red", lwd = 3.5) #normal
+curve(expr = dt(x, df = 3), add = TRUE, col = "black", lty = 2)                            #df = 3
+curve(expr = dt(x, df = 6), add = TRUE, col = "blue", lty = 3)                             #df = 6
+curve(expr = dt(x, df = 30), add = TRUE, col = "green", lwd = 1.5, lty = 4)               #df = 30
+legend("topleft", legend=c("Normal", "t, df = 3", "t, df = 6", "t, df = 30"),
+       col=c("red", "black", "blue", "green"), lty=1:4, cex=0.8)
+
+#The r code below finds the vertical lines that represent the 68% of the distribution
+# of a normal (red) and of a t (black) distribution and plots them on a graph.  
+# Note the t distribution has a greater distance between the black vertial lines
+
+area.68n = qnorm(p = 0.8413447) #value of quantile at ~ 84% of area under curve of normal
+area.68t = qt(p = 0.8413447,df = 3) # same as above but for t, df = 3
+#you need to run all the code together including the line below to the legend
+curve(expr = dnorm(x, mean = 0, sd = 1), from = -4, to = 4, col = "red", lwd = 3) #normal
+curve(expr = dt(x, df = 3), add = TRUE, col = "black")                            #df = 3
+abline(v = area.68n, col = "red") #this line and the next bound 68% of normal distribution
+abline(v = -area.68n, col = "red")
+abline(v = area.68t, lty = 2)  # this line and the next bound 68% of the t distribution.
+abline(v = -area.68t, lty = 2)
+legend("topleft", legend=c("Normal", "t, df = 3"),
+       col=c("red", "black"), lty=1:2, cex=0.8)
+```
+
+### Student's t distribution
+
+Using the statistics calculated in the above section, perform tests of hypotheses to determine if the population from which the samples were taken could have the following means:
+
+a) Average Wean_weight of heifers born in 2005 = 521.9 (alpha 0.05, 0.10)
+b) Average of Wean_weight for all heifers equal to 521.9 (N=50, 150, alpha= 0.05)
+```{r}
+myheifer = read.table('Lab03HeiferData.csv', header = TRUE, sep = ',')
+# a)  One-sample t test on heifer wean weight
+
+myheifer.set = myheifer$Wean_weight[myheifer$Year == "2005"] # get a vector of the wean weight for the heifers born in 2005
+
+t.test(myheifer.set, mu = 521.9) # Ho: mean = 530.4
+
+t.test(myheifer.set, mu = 521.9, conf.level = .90) # Ho: mean = 530.4
+```
+
+
+```{r}
+# b) One sample t test for all years, at the 95% CI, but varying sample sizes
+
+myheifer150 = myheifer$Wean_weight[sample(1:300,150)] #from the 300 weights in myheifer$Wean_weight select randomly 150
+myheifer50 = myheifer$Wean_weight[sample(1:300,50)] #randomly select 50 out of 300 animals
+
+t.test(x = myheifer150, mu =  521.9)
+
+t.test(x = myheifer50, mu = 521.9)
+```
+
+
+## 3. Comparing Two Means
+
+#### Part 1: Test variance differences between two herds using F test
+
+Milk production (lb), milk composition and body weights of UCD lactating dairy cows was collected in August of 2000.  The cows are classified in two groups, Herd1 and Herd2, based on their genotype.
+
+Does the variance of milk production differ between the two herds (Herd1 vs. Herd2)? Use the var.test () R function to test for difference of variances.
+
+```{r}
+MilkData = read.csv("MilkEx5_data.csv")
+
+herd1 = subset(MilkData, HERD == 1)
+milkherd1 = herd1$TOTmilk
+herd2 = subset(MilkData, HERD == 2)
+milkherd2 = herd2$TOTmilk
+
+#use a boxplot to look at the data
+boxplot(milkherd1, milkherd2, names = c("Herd 1", "Herd 2"))
+
+##R function that does the complete test
+var.test(milkherd1, milkherd2)
+```
+
+
+#### Part 2: Test two means from two herds using t statistic  
+
+Calculate the 95% confidence interval for the difference between the milk production of dairy cows between the two herds.
+
+Perform a t-test of the null hypothesis that milk production does not differ between diary cows from Herd1 and Herd2. 
+```{r}
+t.test.herd = t.test(x = milkherd1, y =  milkherd2, alternative = "two.sided",
+                       paired = FALSE, var.equal = TRUE)
+```
+
+
+#### Part 3: Test two means that are paired using t statistic
+
+Milk production was measured in the morning (AM) and again in the evening (PM).  Perform a test to determine if there is a difference in milk production between the AM and PM. Specifically is milkPM > than milkAM. (Note that this is a paired t-test since the same sample of cows is being milk at two separate times).
+
+```{r}
+milkAM = MilkData$AMmilk
+
+milkPM = MilkData$PMmilk
+
+# repeat the test using "hand" calculations as in part 2 above. Add lines of code below.
+
+#difference between the means of milk treatments (AM vs PM)
+d = milkPM - milkAM  # this coding assumes mu1 = MilkPM and mu2 = MilkAM
+
+#use a boxplot to look at the differences:
+boxplot(d)
+
+#Below are two t.test.  The first one uses the differences and the second one use each vector and
+#  calculates the differences.  However, you must indicate the vectors are paired.  
+# The answers below from both t.tests must be the same if you code them correctly
+
+
+#alternative = "greater" implies mu1 - mu2 > 0 or MilkPM - MilkAM > 0 or more formally mu > 0
+t.test(  d  , alternative = "greater")
+
+t.test( milkPM , milkAM , alternative = "greater", paired =  TRUE)
+```
+
+
+
+## 4. CRD Anova
+#### Inspection and summary of data
+
+In the first R chunk we read in the data, then we will plot boxplots of the log(protein), inspect the boxplots and determine if there appear to be any effects of treatments (i.e., diet) on the concentration of protein in the milk.
+
+```{r}
+milk.prot = read.csv(file = "milkprotein2020.csv", header = TRUE)
+
+str(milk.prot)
+
+head(milk.prot)
+
+#Note, the logarithmic transformation has already been applied on the protein data
+boxplot(formula = protein ~ treatment, data = milk.prot,ylab = 'log(protein) %')
+```
+
+
+#### ANOVA using R functions
+
+Use the R function `anova` to obtain the same tests of the null hypothesis that all means are equal. 
+
+```{r}
+linear.model1 = lm(formula = protein ~ treatment,
+                    data = milk.prot)
+
+anova(object = linear.model1)
+```
+
+
+## 5. RCBD Anova
+
+#### Part 1. Read in, inspect and summarize data
+Read in the data. Make boxplots for the milk protein by treatment and by block.
+```{r}
+# If the data were available in a .csv file in the working directory,
+# it could be read in with the following line.
+milk.protB = read.csv(file = "milkproteinlab6.csv", header = TRUE)
+
+print(milk.protB) # The response variable is already log transformed.
+
+# make boxplots for the protein by treatment
+boxplot(protein ~ treatment, milk.protB, ylab = "log(protein)")
+
+# make boxplots for the protein by block
+boxplot(protein ~ block, milk.protB, ylab = "log(protein)")
+```
+
+#### Part 2. RCBD ANOVA using R functions
+
+Use the `anova` function to test the hypothesis that there are no treatment effects (no difference among treatments).
+
+```{r}
+
+RCBDmodel = lm(formula = protein ~ treatment + block,
+                data = milk.protB)
+
+anova(object = RCBDmodel)
+```
+
+## 6. Simple Linear Regression
+
+In simple linear regression (SLR) we study the relationship between a *predictor, explanatory or independent* variable (X, horizontal axis) and a *response or dependent* variable (Y, vertical axis). Different goals may be achieved with SLR. We may be interested in determining how much Y changes as X changes, or we may be interested in estimating the value of Y for values of X that were not observed. All goals require that we estimate parameters of a linear function for a straight line that best fits the data:
+
+$$Y_{i} = \beta_{0} + \beta_{1}X_{i} + \epsilon_{i} \\ \epsilon_{i} \sim N(0, \ \sigma)$$
+
+Best fit is achieved by minimizing the sum of squares of residuals or vertical distances between observations and the line of fit. The estimated parameters are the *slope* ($\beta_{1}$) tangent of the angle between the line and the horizontal, and the *intercept* ($\beta_{0}$), the height of the line when X = 0. Numerically, the *slope* is the rate of change that occurs between the Y (dependent) variable and the X (predictor) variable, or in other words, how the values of Y change with each unit change in the X variable. The *intercept* is the value the Y variable takes when the X variable is equal to 0.  
+
+In this exercise we will examine the relationship between body weight and heart weight in cats. This data was originally published in a short paper by R.A. Fisher in 1947. R.A. Fisher was a British Statistician that developed the foundations for modern statistical theory.
+
+Data for the exercise consists of body weight (Bwt) in kilograms and heart weight (Hwt) in grams of 144 cats. We will examine the relationship between heart weight and body weight in cats.
+
+
+#### Part 1. Plot of data and estimation of parameters.
+
+1A) Make a scatterplot of body weight vs. heart weight.
+1B) Obtain estimates for the slope and intercept and interpret the results in terms of heart weight.
+```{r}
+cats = read.csv("Lab8Cats.csv")
+str(cats)
+
+plot(Hwt_g ~ Bwt_Kg, data = cats) # you could also use: plot(Bwt_Kg, Hwt_g, data = cats)
+
+slr1 = lm(formula = Hwt_g ~ Bwt_Kg, data = cats)
+
+summary(slr1) #the lm function estimates B0 and B1 and summary() provides the results
+```
+
+#### Part 2. Test of null hypothesis and R-square.
+
+Test the null hypothesis that there is no relationship between body weight and heart weight (i.e., $\beta_{1}$ = 0) by performing an ANOVA for regression. 
+
+```{r}
+anova(slr1)
+```
+
+## 7. Contingency Tables and Goodness of Fit
+#### Test of Independence
+
+We can use the $\chi^{2}$ distribution to test for a relationship between two categorical variables.  This type of test is called a *test of independence*. We specifically test the null hypothesis that there is statistical independence between the two categorical variables.  A sample of 169 mice was divided into three groups, 57 that received a standard dose of pathogenic bacteria followed by antiserum, 58 that received the same dose of bacteria, followed by an experimental treatment, and a control group of 54 that received the bacteria, but no treatment. After sufficient time had elapsed for an incubation period and for the disease to run its course, 45 dead mice and 124 survivors were counted. Of those that died, 13 had received bacteria and antiserum, 7 had received the experimental treatment, while 25 had received bacteria only. A question of interest is if the antiserum had in any way protected the mice so that there were proportionally more survivors in that group.
+
+To perform this test of independence, we will (1) create a contingency table, (2) calculate the frequencies we would expect to observe if the treatment (antiserum, control, and experimental) and survival number (alive and dead) are independent (in other words are the row and columns independent), (3) calculate a $\chi^{2}$ test statistic that contains information about the deviation of our observations from what is expected under $H_{0}$ , and finally (4) compare the $\chi^{2}$ test statistic against the critical $\chi^{2}$ value to decide if we reject or fail to reject $H_{0}$
+
+#### Part 1. Create contingency table (20%)
+
+The first step in performing a test of independence is to build a *contingency table* with j rows and k columns. One variable is classed into j factor levels in the rows, and the second variable is classed into k factor levels in the columns.  The frequencies of each combination of attributes between the two variables fill the table and are used to calculate the marginal totals for each attribute.
+
+1A) Read in the mice data set as a csv file
+1B) Create a contingency table using the table() function.  
+1C) Calculate the marginal totals of each attribute type of each of the two variables.  
+
+```{r}
+mice = read.csv("mice.csv")
+##use table() to calculate the frequencies of each treatment/result combination in the data.
+
+(micect = table(mice))
+
+#marginal totals:
+
+(treatSums = rowSums(micect))
+(survSums = colSums(micect))
+
+pander::pander(addmargins(micect)) #addmarigins is a function that sums rows and columns to the margins
+```
+
+
+The null and alternative hypotheses: Ho: Treatment and survivability are independent variables. Ha: Treatment and survivability are not independent.
+
+Use a built in R function to do a test of independence
+
+```{r}
+chisq.test(micect)
+```
+The pvalue of 0.00017 is the probability the the observed statistic value (chisq = 17.4) or larger could occur given Ho is true.  The critical chi value is 5.99. The Ho should be rejected and the Ha accepted with this evidence.  The treatment and survivability are not independent.  As mentioned before, I would recommend using the experimental treatment and if that wasn't available then I would recommend using the antiserum.  
+
+
+#### Goodness of Fit
+
+Say you are harvesting persimmons from four different aged trees on your property. Of the total crop you are expecting to get 15%, 25%, 30% and 30% from trees A, B, C and D.  You harvested your crop and had 20, 60, 80, and 40 persimmons from trees A, B, C, and D.  You need to do a Chi-sq test using the chisq.test() function and answer the questions below. Assume alpha of 0.05.
+
+```{r}
+cropharvest = c( 20, 60 , 80, 40)
+
+expectedProb = c(.15, .25, .30, .30)
+
+CritChi = qchisq(p = 0.05, df = 3, lower.tail=FALSE)
+
+chisq.test(x=cropharvest, p=expectedProb)
+```
+
+The pvalue of 0.0003 if the probability that the observed Chi-sq value (or a greater value) could occur given the Ho is true. Because the pvalue is so low and below the alpha value of 0.05, then reject the Ho and accept the Ha.
